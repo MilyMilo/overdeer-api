@@ -1,6 +1,9 @@
 # Overdeer - the friendly school overseer
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/Scr1ptK1tt13s/overdeer-api.svg)](https://greenkeeper.io/)
+[![CircleCI](https://circleci.com/gh/Scr1ptK1tt13s/overdeer-api.svg?style=svg)](https://circleci.com/gh/Scr1ptK1tt13s/overdeer-api)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c2f10694b0f4eab4e708/maintainability)](https://codeclimate.com/github/Scr1ptK1tt13s/overdeer-api/maintainability)
+[![Greenkeeper](https://badges.greenkeeper.io/Scr1ptK1tt13s/overdeer-api.svg)](https://greenkeeper.io/)
+[![Known Vulnerabilities](https://snyk.io/test/github/Scr1ptK1tt13s/overdeer-api/badge.svg)](https://snyk.io/test/github/Scr1ptK1tt13s/overdeer-api)
 
 > Back-end API implementation
 
@@ -51,6 +54,8 @@ Also **Make sure the DB is up and running**, and you have entered created your `
 #### To use our docker-compose
 
 > This will create an auto-reloading container with the app, mongodb instance and mongo-admin at localhost:5555
+
+> If running with compose, your db's hostname will be just `mongo`, fill that in your `config/dev.js`
 
 - `docker-compose up`
 
