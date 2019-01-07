@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: circleci/node:11.6.0
         environment:
-          NODE_ENV: circle
+          TEST_ENV: circle
       - image: mongo:4.1.6
 
     working_directory: ~/overdeer-api

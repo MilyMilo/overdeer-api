@@ -11,7 +11,7 @@ beforeAll(async () => {
   process.env.TEST_SUITE = "register-test";
 
   // CircleCI is configured to use db without auth on localhost
-  if (process.env.NODE_ENV === "circle") {
+  if (process.env.TEST_ENV === "circle") {
     try {
       await mongoose.connect(
         `mongodb://localhost:27017/${process.env.TEST_SUITE}`,
