@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`POST /api/register email missing user creation: email missing 1`] = `
+Object {
+  "email": "Email is invalid",
+}
+`;
+
+exports[`POST /api/register malformed email user creation: email invalid 1`] = `
+Object {
+  "email": "Email is invalid",
+}
+`;
+
+exports[`POST /api/register password missing user creation: empty request 1`] = `
+Object {
+  "email": "Email is invalid",
+  "password": "Password must be at least 6 characters",
+  "username": "Username field is required",
+}
+`;
+
+exports[`POST /api/register password missing user creation: password missing 1`] = `
+Object {
+  "password": "Password must be at least 6 characters",
+}
+`;
+
+exports[`POST /api/register username missing user creation: username missing 1`] = `
+Object {
+  "username": "Username field is required",
+}
+`;
+
+exports[`POST /api/register valid user creation: valid user 1`] = `"{\\"username\\":\\"validuser\\",\\"email\\":\\"valid@user.com\\"}"`;

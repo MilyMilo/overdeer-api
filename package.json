@@ -1,0 +1,54 @@
+{
+  "name": "overdeer-api",
+  "version": "1.0.0",
+  "description": "Overdeer - the friendly school overseer",
+  "author": "Scr1ptK1tt13s <meow@scriptkitties.space>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Scr1ptK1tt13s/overdeer-api.git"
+  },
+  "main": "src/app.js",
+  "scripts": {
+    "start": "NODE_ENV=production pm2 start src/app.js -i 0",
+    "dev": "nodemon src/app.js",
+    "test:unit": "jest --testEnvironment node --updateSnapshot",
+    "test:cov": "jest --testEnvironment node --collectCoverageFrom=src/**/*.js --collectCoverageFrom=!config/* --coverage test",
+    "lint": "eslint src/** test/*.test.js",
+    "lint:fix": "eslint --fix src/** test/*.test.js",
+    "docs:watch": "redoc-cli serve ./docs/openapi.spec.yml --port 8000 --watch --ssr 2>/dev/null",
+    "docs:build": "redoc-cli bundle ./docs/openapi.spec.yml --output ./docs/index.html --title 'Overdeer API Docs' 2>/dev/null"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run test"
+    }
+  },
+  "devDependencies": {
+    "eslint": "^5.12.0",
+    "eslint-config-prettier": "^3.3.0",
+    "eslint-plugin-prettier": "^3.0.1",
+    "husky": "^1.3.1",
+    "jest": "^23.6.0",
+    "nodemon": "^1.18.9",
+    "prettier": "^1.15.3",
+    "redoc-cli": "^0.7.0",
+    "supertest": "^3.3.0"
+  },
+  "dependencies": {
+    "@sentry/node": "^4.4.2",
+    "bcryptjs": "^2.4.3",
+    "bluebird": "^3.5.3",
+    "jsonwebtoken": "^8.4.0",
+    "koa": "^2.6.2",
+    "koa-bodyparser": "^4.2.1",
+    "koa-morgan": "^1.0.1",
+    "koa-passport": "^4.1.1",
+    "koa-router": "^7.4.0",
+    "mongoose": "^5.4.2",
+    "passport-jwt": "^4.0.0",
+    "pm2": "^3.2.4",
+    "validator": "^10.10.0"
+  }
+}
