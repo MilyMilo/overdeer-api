@@ -1,5 +1,7 @@
 # Overdeer - the friendly school overseer
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Scr1ptK1tt13s/overdeer-api.svg)](https://greenkeeper.io/)
+
 > Back-end API implementation
 
 **Under heavy development! Expect breaking changes without notice!**
