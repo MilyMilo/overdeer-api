@@ -12,3 +12,4 @@ mongoose
   });
 
 require("../models/User");
+require("../models/Group");

@@ -11,18 +11,49 @@ const config = require("../../../config");
 
 const router = new Router();
 
-const validateLogin = require("../../validation/login");
-const validateRegister = require("../../validation/register");
+const {
+  validateRegisterInput,
+  validateLoginInput
+} = require("../../validation/users");
 
 /**
  * @route POST /api/login
  * @desc Login a user
  * @access Public
+ * @example
+ * ```
+ * POST /api/login -->
+ * {
+ *     "username": "example",
+ *     "password": "strong"
+ * }
+ *
+ * <-- 200 OK
+ * {
+ *     "token": "Bearer <JWT_signed_token>"
+ * }
+ *
+ * <-- 400 Bad request
+ * {
+ *     "email": "Email has to be of type string"
+ * }
+ *
+ * <-- 401 Unauthorized
+ * {
+ *     "login": "Invalid user or/and password"
+ * }
+ *
+ * <-- 422 Unprocessable Entity
+ * {
+ *     "email": "Email is invalid"
+ * }
+ * ```
  */
 router.post("/login", async ctx => {
-  const { errors, isValid } = validateLogin(ctx.request.body);
+  const { errors, isValid } = validateLoginInput(ctx.request.body);
   if (!isValid) {
-    ctx.status = 422;
+    if (isType) ctx.status = 400;
+    else ctx.status = 422;
     ctx.body = errors;
     return;
   }
@@ -30,15 +61,17 @@ router.post("/login", async ctx => {
   const { email, password } = ctx.request.body;
   const user = await User.findOne({ email });
   if (!user) {
+    ctx.set("WWW-Authenticate", `Bearer realm="basicLogin"`);
     ctx.status = 401;
-    ctx.body = "Invalid user or/and password";
+    ctx.body = { login: "Invalid user or/and password" };
     return;
   }
 
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) {
+    ctx.set("WWW-Authenticate", `Bearer realm="basicLogin"`);
     ctx.status = 401;
-    ctx.body = "Invalid user or/and password";
+    ctx.body = { login: "Invalid user or/and password" };
     return;
   }
 
@@ -61,12 +94,44 @@ router.post("/login", async ctx => {
  * @route POST /api/register
  * @desc Register an user
  * @access Public
+ * @example
+ * ```
+ * POST /api/register -->
+ * {
+ *     "username": "example",
+ *     "email": "user@example.com",
+ *     "password": "strong123!"
+ * }
+ *
+ * <-- 201 Created
+ * {
+ *     "username": "example",
+ *     "email": "user@example.com",
+ * }
+ *
+ * <-- 400 Bad request
+ * {
+ *     "email": "Email has to be of type string"
+ * }
+ *
+ * <-- 409 Conflict
+ * {
+ *     "email": "This email is already registered"
+ * }
+ *
+ * <-- 422 Unprocessable Entity
+ * {
+ *     "email": "Email is invalid"
+ * }
+ * ```
  */
 router.post("/register", async ctx => {
-  const { errors, isValid } = validateRegister(ctx.request.body);
+  const { errors, isValid, isType } = validateRegisterInput(ctx.request.body);
 
   if (!isValid) {
-    ctx.status = 422;
+    if (isType) ctx.status = 400;
+    else ctx.status = 422;
+
     ctx.body = errors;
     return;
   }
@@ -105,7 +170,7 @@ router.post("/register", async ctx => {
 /**
  * @route GET /api/current
  * @desc Returns user authenticated during the request
- * @access Private
+ * @access Logged-in
  */
 router.get(
   "/current",

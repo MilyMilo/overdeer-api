@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`POST /api/register email missing user creation: email missing 1`] = `
+Object {
+  "email": "Email has to be of type string",
+}
+`;
+
+exports[`POST /api/register malformed email user creation: email invalid 1`] = `
+Object {
+  "email": "Email is invalid",
+}
+`;
+
+exports[`POST /api/register valid user creation: valid user 1`] = `"{\\"username\\":\\"validuser\\",\\"email\\":\\"valid@user.com\\"}"`;
