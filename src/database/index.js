@@ -11,5 +11,7 @@ mongoose
     throw err;
   });
 
+require("../models/EventCounter");
 require("../models/User");
 require("../models/Group");
+require("../models/Event");

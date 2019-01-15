@@ -20,34 +20,6 @@ const {
  * @route POST /api/login
  * @desc Login a user
  * @access Public
- * @example
- * ```
- * POST /api/login -->
- * {
- *     "username": "example",
- *     "password": "strong"
- * }
- *
- * <-- 200 OK
- * {
- *     "token": "Bearer <JWT_signed_token>"
- * }
- *
- * <-- 400 Bad request
- * {
- *     "email": "Email has to be of type string"
- * }
- *
- * <-- 401 Unauthorized
- * {
- *     "login": "Invalid user or/and password"
- * }
- *
- * <-- 422 Unprocessable Entity
- * {
- *     "email": "Email is invalid"
- * }
- * ```
  */
 router.post("/login", async ctx => {
   const { errors, isValid } = validateLoginInput(ctx.request.body);
@@ -94,36 +66,6 @@ router.post("/login", async ctx => {
  * @route POST /api/register
  * @desc Register an user
  * @access Public
- * @example
- * ```
- * POST /api/register -->
- * {
- *     "username": "example",
- *     "email": "user@example.com",
- *     "password": "strong123!"
- * }
- *
- * <-- 201 Created
- * {
- *     "username": "example",
- *     "email": "user@example.com",
- * }
- *
- * <-- 400 Bad request
- * {
- *     "email": "Email has to be of type string"
- * }
- *
- * <-- 409 Conflict
- * {
- *     "email": "This email is already registered"
- * }
- *
- * <-- 422 Unprocessable Entity
- * {
- *     "email": "Email is invalid"
- * }
- * ```
  */
 router.post("/register", async ctx => {
   const { errors, isValid, isType } = validateRegisterInput(ctx.request.body);
@@ -170,7 +112,7 @@ router.post("/register", async ctx => {
 /**
  * @route GET /api/current
  * @desc Returns user authenticated during the request
- * @access Logged-in
+ * @access Private
  */
 router.get(
   "/current",
