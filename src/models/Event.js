@@ -3,8 +3,9 @@ const Schema = mongoose.Schema;
 
 const EventCounter = require("./EventCounter");
 
+const { CommentSchema } = require("./Comment");
+
 const EventSchema = new Schema({
-  // _id
   // public facing id
   id: { type: Schema.Types.Number },
   name: { type: Schema.Types.String },
@@ -20,6 +21,7 @@ const EventSchema = new Schema({
   // files: [{ type: Schema.Types.String }],
   groupId: { type: Schema.Types.ObjectId, ref: "groups" },
   creator: { type: Schema.Types.ObjectId, ref: "users" },
+  comments: [CommentSchema],
   createdAt: { type: Schema.Types.Date, default: Date.now }
 });
 

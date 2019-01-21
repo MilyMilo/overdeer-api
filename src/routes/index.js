@@ -3,15 +3,15 @@ const Router = require("koa-router");
 const router = new Router();
 const apiRouter = new Router();
 
-const common = require("./api/common");
 const users = require("./api/users");
 const groups = require("./api/groups");
 const events = require("./api/events");
+const comments = require("./api/comments");
 
-apiRouter.use(common);
 apiRouter.use(users);
 apiRouter.use(groups);
 apiRouter.use(events);
+apiRouter.use(comments);
 
 router.use("/api", apiRouter.routes());
 

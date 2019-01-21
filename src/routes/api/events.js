@@ -13,12 +13,12 @@ const Group = require("../../models/Group");
 const Event = require("../../models/Event");
 
 /**
- * @route POST /api/groups/:slug
+ * @route POST /api/groups/:slug/events
  * @desc Create a event
  * @access Private
  */
 router.post(
-  "/groups/:slug",
+  "/groups/:slug/events",
   passport.authenticate("jwt", { session: false }),
   async ctx => {
     d(ctx.request.body);
@@ -50,8 +50,6 @@ router.post(
     }
 
     const { name, description, type, subject, date } = ctx.request.body;
-    const creator = ctx.state.user.id;
-
     const newEvent = await new Event({
       name,
       description,
@@ -59,7 +57,7 @@ router.post(
       subject,
       date,
       groupId: group._id,
-      creator
+      creator: uid
     });
 
     try {
@@ -80,16 +78,15 @@ router.post(
 );
 
 /**
- * @route GET /api/groups/:slug/:id
+ * @route GET /api/groups/:slug/events/:eid
  * @desc Get event by group slug and event id
  * @access Private
  */
 router.get(
-  "/groups/:slug/:id",
+  "/groups/:slug/events/:eid",
   passport.authenticate("jwt", { session: false }),
   async ctx => {
-    const slug = ctx.params.slug;
-    const eid = ctx.params.id;
+    const { slug, eid } = ctx.params;
     const uid = ctx.state.user.id;
 
     // TODO: Differentiate between not found and not a member?
@@ -123,12 +120,12 @@ router.get(
 );
 
 /**
- * @route PUT /api/groups/:slug/:id
- * @desc Update event by id
+ * @route PUT /api/groups/:slug/event/:eid
+ * @desc Update event by event id
  * @access Private
  */
 router.put(
-  "/groups/:slug/:id",
+  "/groups/:slug/events/:eid",
   passport.authenticate("jwt", { session: false }),
   async ctx => {
     d(ctx.request.body);
@@ -144,8 +141,7 @@ router.put(
       return;
     }
 
-    const slug = ctx.params.slug;
-    const eid = ctx.params.id;
+    const { slug, eid } = ctx.params;
     const uid = ctx.state.user.id;
 
     // TODO: Move to members check
@@ -176,7 +172,7 @@ router.put(
       return;
     }
 
-    const { body } = ctx.request;
+    const body = ctx.request.body;
 
     if ("name" in body) {
       event.name = body.name;
@@ -223,16 +219,15 @@ router.put(
 );
 
 /**
- * @route DELETE /api/groups/:slug/:id
- * @desc Delete event by id
+ * @route DELETE /api/groups/:slug/events/:eid
+ * @desc Delete event by event id
  * @access Private
  */
 router.delete(
-  "/groups/:slug/:id",
+  "/groups/:slug/events/:eid",
   passport.authenticate("jwt", { session: false }),
   async ctx => {
-    const slug = ctx.params.slug;
-    const eid = ctx.params.id;
+    const { slug, eid } = ctx.params;
     const uid = ctx.state.user.id;
 
     const group = await Group.findOne({
@@ -259,8 +254,12 @@ router.delete(
       return;
     }
 
-    await Event.deleteOne({ id: eid });
-    ctx.status = 204;
+    try {
+      await Event.deleteOne({ id: eid });
+      ctx.status = 204;
+    } catch (err) {
+      ctx.throw(err);
+    }
   }
 );
 

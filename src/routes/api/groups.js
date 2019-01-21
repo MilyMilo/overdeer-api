@@ -39,7 +39,7 @@ router.post(
     }
 
     const { name, description, isPrivate } = ctx.request.body;
-    const owner = ctx.state.user.id;
+    const uid = ctx.state.user.id;
 
     const slug = slugify(name);
 
@@ -55,8 +55,8 @@ router.post(
       slug,
       description,
       isPrivate,
-      owner,
-      members: [owner]
+      owner: uid,
+      members: [uid]
     });
 
     try {
@@ -142,6 +142,7 @@ router.get(
       .populate("creator", "-__v -email -password -registeredAt");
 
     ctx.status = 200;
+    // reverse lookup - basically merge group with it's events
     ctx.body = { ...group._doc, events };
   }
 );
@@ -163,8 +164,6 @@ router.put(
     );
 
     if (!isValid) {
-      // TODO: Standard error returning format.
-      // 400, and 422s should return key-names where the error occurred, and the rest just 'error'?
       if (isType) ctx.status = 400;
       else ctx.status = 422;
 
@@ -185,7 +184,7 @@ router.put(
       return;
     }
 
-    const { body } = ctx.request;
+    const body = ctx.request.body;
     if ("name" in body) {
       // TODO: Create redirect to new slug?
       const newName = body.name;
@@ -206,13 +205,11 @@ router.put(
     }
 
     if ("description" in body) {
-      const newDescription = body.description;
-      group.description = newDescription;
+      group.description = body.description;
     }
 
     if ("isPrivate" in body) {
-      const newPrivacy = body.isPrivate;
-      group.isPrivate = newPrivacy;
+      group.isPrivate = body.isPrivate;
     }
 
     try {
@@ -248,14 +245,19 @@ router.delete(
       return;
     }
 
-    if (ctx.state.user.id !== group.owner.toString()) {
+    const uid = ctx.state.user.id;
+    if (uid !== group.owner.toString()) {
       ctx.status = 403;
       ctx.body = { error: "Insufficient permissions to delete this group" };
       return;
     }
 
-    await Group.deleteOne({ slug });
-    ctx.status = 204;
+    try {
+      await Group.deleteOne({ slug });
+      ctx.status = 204;
+    } catch (err) {
+      ctx.throw(err);
+    }
   }
 );
 

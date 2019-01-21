@@ -5,7 +5,6 @@ const EventCounter = require("./EventCounter");
 const Event = require("./Event");
 
 const GroupSchema = new Schema({
-  // _id
   name: { type: Schema.Types.String },
   slug: { type: Schema.Types.String },
   description: { type: Schema.Types.String },
