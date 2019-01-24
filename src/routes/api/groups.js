@@ -14,8 +14,6 @@ const Event = require("../../models/Event");
 
 const router = new Router();
 
-// TODO: Join functionality
-
 /**
  * @route POST /api/groups
  * @desc Create a group
@@ -113,6 +111,91 @@ router.get("/groups", async ctx => {
 });
 
 /**
+ * @route GET /api/groups/:slug/join
+ * @desc Join a group by slug
+ * @access Private
+ */
+router.post(
+  "/groups/:slug/join",
+  passport.authenticate("jwt", { session: false }),
+  async ctx => {
+    const slug = ctx.params.slug;
+    const uid = ctx.state.user.id;
+
+    // TODO: Private group join mechanics, invite only?
+    const group = await Group.findOne({
+      slug,
+      isPrivate: false
+    });
+
+    if (!group) {
+      ctx.status = 404;
+      ctx.body = { error: "Group not found" };
+      return;
+    }
+
+    const exUser = group.members.findIndex(id => id.toString() === uid);
+    if (exUser > -1) {
+      ctx.status = 409;
+      ctx.body = { error: "You are already a member of this group" };
+      return;
+    }
+
+    try {
+      await Group.findOneAndUpdate(
+        { _id: group._id },
+        { $push: { members: uid } }
+      );
+
+      ctx.status = 200;
+      ctx.body = group;
+    } catch (err) {
+      ctx.throw(err);
+    }
+  }
+);
+
+/**
+ * @route GET /api/groups/:slug/leave
+ * @desc Leave a group by slug
+ * @access Private
+ */
+router.post(
+  "/groups/:slug/leave",
+  passport.authenticate("jwt", { session: false }),
+  async ctx => {
+    const slug = ctx.params.slug;
+    const uid = ctx.state.user.id;
+
+    const group = await Group.findOne({ slug });
+    if (!group) {
+      ctx.status = 404;
+      ctx.body = { error: "Group not found" };
+      return;
+    }
+
+    // Not a member
+    const exUser = group.members.findIndex(id => id.toString() === uid);
+    if (exUser < 0) {
+      ctx.status = 409;
+      ctx.body = { error: "You are not a member of this group" };
+      return;
+    }
+
+    try {
+      await Group.findOneAndUpdate(
+        { _id: group._id },
+        { $pull: { members: uid } }
+      );
+
+      ctx.status = 204;
+    } catch (err) {
+      ctx.throw(err);
+    }
+  }
+);
+
+/**
  * @route GET /api/groups/:slug
  * @desc Get group by slug
  * @access Private
@@ -122,10 +205,11 @@ router.get(
   passport.authenticate("jwt", { session: false }),
   async ctx => {
     const slug = ctx.params.slug;
+    const uid = ctx.state.user.id;
 
     // find a public group by the slug or a private one where the user is an owner
     const group = await Group.findOne({
-      $or: [{ slug, isPrivate: false }, { slug, owner: ctx.state.user.id }]
+      $or: [{ slug, isPrivate: false }, { slug, owner: uid }]
     })
       .select("-__v")
       .populate("members", "-__v -email -password -registeredAt")
@@ -158,6 +242,7 @@ router.put(
   async ctx => {
     d(ctx.request.body);
     const slug = ctx.params.slug;
+    const uid = ctx.state.user.id;
 
     const { errors, isValid, isType } = validateUpdateGroupInput(
       ctx.request.body
@@ -178,7 +263,7 @@ router.put(
       return;
     }
 
-    if (ctx.state.user.id !== group.owner.toString()) {
+    if (uid !== group.owner.toString()) {
       ctx.status = 403;
       ctx.body = { error: "Insufficient permissions to update this group" };
       return;

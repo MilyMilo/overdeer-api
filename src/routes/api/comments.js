@@ -57,8 +57,10 @@ router.post(
     });
 
     try {
-      event.comments.push(newComment);
-      await event.save();
+      await Event.findOneAndUpdate(
+        { _id: event._id },
+        { $push: { comments: newComment } }
+      );
       ctx.status = 204;
     } catch (err) {
       ctx.throw(err);
@@ -100,21 +102,23 @@ router.delete(
     }
 
     const comments = event.comments;
-    const commentIndex = comments.findIndex(
+    const comment = comments.find(
       comment =>
         comment.creator.toString() === uid && comment._id.toString() === cid
     );
 
-    if (commentIndex < 0) {
+    if (!comment) {
       ctx.status = 404;
       ctx.body = { error: "Comment not found" };
       return;
     }
 
     try {
-      event.comments.splice(commentIndex, 1);
+      await Event.findOneAndUpdate(
+        { _id: event._id },
+        { $pull: { comments: { _id: comment._id } } }
+      );
 
-      await event.save();
       ctx.status = 204;
       return;
     } catch (err) {
@@ -168,24 +172,32 @@ router.put(
 
     const content = ctx.request.body.content;
     const comments = event.comments;
-    const commentIndex = comments.findIndex(
+    const comment = comments.find(
       comment =>
         comment.creator.toString() === uid && comment._id.toString() === cid
     );
 
-    if (commentIndex < 0) {
+    if (!comment) {
       ctx.status = 404;
       ctx.body = { error: "Comment not found" };
       return;
     }
 
     try {
-      event.comments[commentIndex].content = content;
-      event.comments[commentIndex].updatedAt = Date.now();
+      await Event.findOneAndUpdate(
+        {
+          _id: event._id,
+          "comments._id": comment._id
+        },
+        {
+          $set: {
+            "comments.$.content": content,
+            "comments.$.updatedAt": Date.now()
+          }
+        }
+      );
 
-      await event.save();
       ctx.status = 204;
-      return;
     } catch (err) {
       ctx.throw(err);
     }
