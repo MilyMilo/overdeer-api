@@ -1,7 +1,7 @@
 const Validator = require("validator");
 const { isEmpty, typeCheck } = require("./utils");
 
-// rare case where the same validator is used for crates and updates
+// rare case where the same validator is used for creates and updates
 validateCommentInput = data => {
   let errors = {};
 

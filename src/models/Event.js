@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const EventCounter = require("./EventCounter");
+const Counter = require("./Counter");
 
 const { CommentSchema } = require("./Comment");
 
@@ -28,7 +28,7 @@ const EventSchema = new Schema({
 EventSchema.pre("save", async function(next) {
   if (this.isNew) {
     try {
-      const counter = await EventCounter.findByIdAndUpdate(this.groupId, {
+      const counter = await Counter.findByIdAndUpdate(this.groupId, {
         $inc: { seq: 1 }
       });
 

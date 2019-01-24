@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const EventCounter = require("./EventCounter");
+const Counter = require("./Counter");
 const Event = require("./Event");
 
 const GroupSchema = new Schema({
@@ -18,7 +18,7 @@ const GroupSchema = new Schema({
 GroupSchema.pre("save", async function(next) {
   if (this.isNew) {
     try {
-      await new EventCounter({
+      await new Counter({
         _id: this._id
       }).save();
     } catch (err) {
@@ -33,8 +33,8 @@ GroupSchema.pre("remove", async function(next) {
   try {
     await Event.deleteMany({ groupId: this._id });
 
-    // EventCounter is created one per-group
-    await EventCounter.deleteOne({ _id: this._id });
+    // Counter is created one per-group
+    await Counter.deleteOne({ _id: this._id });
   } catch (err) {
     return next(err);
   }
