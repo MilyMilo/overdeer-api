@@ -3,6 +3,8 @@ const Koa = require("koa");
 const morgan = require("koa-morgan");
 const bodyParser = require("koa-bodyparser");
 const passport = require("koa-passport");
+const serve = require("koa-static");
+const mount = require("koa-mount");
 const Sentry = require("@sentry/node");
 
 const config = require("../config");
@@ -43,6 +45,12 @@ app.use(passport.initialize());
 const router = require("./routes");
 app.use(router.routes());
 app.use(router.allowedMethods());
+
+// Static files
+const uploads = new Koa();
+// TODO: Restrict access to group members?
+uploads.use(serve(config.UPLOAD_DIR));
+app.use(mount(config.STATIC_DIR, uploads));
 
 // If run directly not just imported
 if (!module.parent) {
