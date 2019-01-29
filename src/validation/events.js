@@ -10,7 +10,8 @@ validateCreateEventInput = data => {
     type: "string",
     subject: "string",
     // TODO: Common date format
-    date: "number"
+    date: "number",
+    files: "array?"
   };
 
   const { typeErrors, isValid } = typeCheck(data, typeMap);
@@ -39,6 +40,20 @@ validateCreateEventInput = data => {
     errors.subject = "Provided event subject is invalid";
   }
 
+  files: if ("files" in data) {
+    if (data.files.length > 10) {
+      errors.files = "Cannot attach more than 10 files";
+      break files;
+    }
+
+    for (const file of data.files) {
+      if (!Validator.isMongoId(file)) {
+        errors.files = "Files contain invalid value";
+        break;
+      }
+    }
+  }
+
   return {
     errors,
     isValid: isEmpty(errors),
@@ -54,7 +69,8 @@ validateUpdateEventInput = data => {
     description: "string?",
     type: "string?",
     subject: "string?",
-    date: "number?"
+    date: "number?",
+    files: "array?"
   };
 
   const { typeErrors, isValid } = typeCheck(data, typeMap);
@@ -87,6 +103,20 @@ validateUpdateEventInput = data => {
   if ("subject" in data) {
     if (!Validator.isIn(data.subject, ["math", "english", "cs"])) {
       errors.subject = "Provided event subject is invalid";
+    }
+  }
+
+  files: if ("files" in data) {
+    if (data.files.length > 10) {
+      errors.files = "Cannot attach more than 10 files";
+      break files;
+    }
+
+    for (const file of data.files) {
+      if (!Validator.isMongoId(file)) {
+        errors.files = "Files contain invalid value";
+        break;
+      }
     }
   }
 

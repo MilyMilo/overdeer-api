@@ -2,8 +2,15 @@ const Router = require("koa-router");
 const router = new Router();
 const passport = require("koa-passport");
 
-const File = require("../../../models/File");
+const { File } = require("../../../models/File");
 
+const { httpError } = require("../utils");
+
+/**
+ * @route POST /api/upload/:id
+ * @desc Delete a file
+ * @access Private
+ */
 router.delete(
   "/upload/:id",
   passport.authenticate("jwt", { session: false }),
@@ -14,24 +21,23 @@ router.delete(
     const file = await File.findById(fid);
 
     if (!file) {
-      ctx.status = 404;
-      ctx.response.body = { error: "File not found" };
-      return;
+      return httpError(ctx, 404, "FILES/NOT_FOUND", "File not found");
     }
 
     if (uid !== file.owner.toString()) {
-      ctx.status = 403;
-      ctx.response.body = {
-        error: "Insufficient permissions to delete this file"
-      };
-      return;
+      return httpError(
+        ctx,
+        403,
+        "FILES/NOT_PERMITTED",
+        "Insufficient permissions to delete this file"
+      );
     }
 
     try {
       await file.remove();
       ctx.status = 204;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "FILES/DELETE_INTERNAL", description: err });
     }
   }
 );

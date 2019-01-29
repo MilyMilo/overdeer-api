@@ -5,7 +5,9 @@ const d = require("debug")("api:comments:update");
 
 const Group = require("../../../models/Group");
 const Event = require("../../../models/Event");
+const { File } = require("../../../models/File");
 
+const { httpError } = require("../utils");
 const { validateCommentInput } = require("../../../validation/comments");
 
 /**
@@ -21,11 +23,8 @@ router.put(
     const { errors, isValid, isType } = validateCommentInput(ctx.request.body);
 
     if (!isValid) {
-      if (isType) ctx.status = 400;
-      else ctx.status = 422;
-
-      ctx.body = errors;
-      return;
+      if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+      else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
     }
 
     const { slug, cid, eid } = ctx.params;
@@ -36,9 +35,7 @@ router.put(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const event = await Event.findOne({
@@ -47,12 +44,9 @@ router.put(
     });
 
     if (!event) {
-      ctx.status = 404;
-      ctx.body = { error: "Event not found" };
-      return;
+      return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
-    const content = ctx.request.body.content;
     const comments = event.comments;
     const comment = comments.find(
       comment =>
@@ -60,9 +54,16 @@ router.put(
     );
 
     if (!comment) {
-      ctx.status = 404;
-      ctx.body = { error: "Comment not found" };
-      return;
+      return httpError(ctx, 404, "COMMENTS/NOT_FOUND", "Comment not found");
+    }
+
+    const body = ctx.request.body;
+    const content = body.content;
+
+    let fileDocs = [];
+    if ("files" in body) {
+      const fileIds = body.files;
+      fileDocs = await File.find({ _id: { $in: fileIds } });
     }
 
     try {
@@ -74,6 +75,7 @@ router.put(
         {
           $set: {
             "comments.$.content": content,
+            "comments.$.files": fileDocs,
             "comments.$.updatedAt": Date.now()
           }
         }
@@ -81,7 +83,7 @@ router.put(
 
       ctx.status = 204;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "COMMENTS/UPDATE_INTERNAL", description: err });
     }
   }
 );

@@ -4,9 +4,10 @@ const passport = require("koa-passport");
 const slugify = require("slug");
 const d = require("debug")("api:groups:create");
 
-const { validateCreateGroupInput } = require("../../../validation/groups");
-
 const Group = require("../../../models/Group");
+
+const { httpError } = require("../utils");
+const { validateCreateGroupInput } = require("../../../validation/groups");
 
 /**
  * @route POST /api/groups
@@ -23,11 +24,8 @@ router.post(
     );
 
     if (!isValid) {
-      if (isType) ctx.status = 400;
-      else ctx.status = 422;
-
-      ctx.body = errors;
-      return;
+      if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+      else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
     }
 
     const { name, description, isPrivate } = ctx.request.body;
@@ -37,9 +35,12 @@ router.post(
 
     const group = await Group.findOne({ slug });
     if (group) {
-      ctx.status = 409;
-      ctx.body = { error: "This name is already taken" };
-      return;
+      return httpError(
+        ctx,
+        409,
+        "GROUPS/ALREADY_EXISTS",
+        "This name is already taken"
+      );
     }
 
     const newGroup = await new Group({
@@ -62,7 +63,7 @@ router.post(
         isPrivate: newGroup.isPrivate
       };
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "GROUPS/CREATE_INTERNAL", description: err });
     }
   }
 );

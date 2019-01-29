@@ -4,6 +4,8 @@ const passport = require("koa-passport");
 
 const Group = require("../../../models/Group");
 
+const { httpError } = require("../utils");
+
 /**
  * @route GET /api/groups/:slug/leave
  * @desc Leave a group by slug
@@ -18,17 +20,18 @@ router.post(
 
     const group = await Group.findOne({ slug });
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     // Not a member
     const exUser = group.members.findIndex(id => id.toString() === uid);
     if (exUser < 0) {
-      ctx.status = 409;
-      ctx.body = { error: "You are not a member of this group" };
-      return;
+      return httpError(
+        ctx,
+        409,
+        "GROUPS/MEMBER_NOT_FOUND",
+        "You are not a member of this group"
+      );
     }
 
     try {
@@ -39,7 +42,7 @@ router.post(
 
       ctx.status = 204;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "GROUPS/LEAVE_INTERNAL", description: err });
     }
   }
 );

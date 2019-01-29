@@ -5,6 +5,8 @@ const passport = require("koa-passport");
 const Event = require("../../../models/Event");
 const Group = require("../../../models/Group");
 
+const { httpError } = require("../utils");
+
 /**
  * @route DELETE /api/groups/:slug/events/:eid/comments/:cid
  * @desc Delete a comment
@@ -22,9 +24,7 @@ router.delete(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const event = await Event.findOne({
@@ -33,9 +33,7 @@ router.delete(
     });
 
     if (!event) {
-      ctx.status = 404;
-      ctx.body = { error: "Event not found" };
-      return;
+      return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
     const comments = event.comments;
@@ -45,9 +43,7 @@ router.delete(
     );
 
     if (!comment) {
-      ctx.status = 404;
-      ctx.body = { error: "Comment not found" };
-      return;
+      return httpError(ctx, 404, "COMMENTS/NOT_FOUND", "Comment not found");
     }
 
     try {
@@ -59,7 +55,7 @@ router.delete(
       ctx.status = 204;
       return;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "COMMENTS/DELETE_INTERNAL", description: err });
     }
   }
 );

@@ -9,6 +9,7 @@ const jwtSign = promisify(jwt.sign);
 const User = require("../../../models/User");
 const config = require("../../../../config");
 
+const { httpError } = require("../utils");
 const { validateLoginInput } = require("../../../validation/users");
 
 /**
@@ -17,29 +18,33 @@ const { validateLoginInput } = require("../../../validation/users");
  * @access Public
  */
 router.post("/login", async ctx => {
-  const { errors, isValid } = validateLoginInput(ctx.request.body);
+  const { errors, isValid, isType } = validateLoginInput(ctx.request.body);
   if (!isValid) {
-    if (isType) ctx.status = 400;
-    else ctx.status = 422;
-    ctx.body = errors;
-    return;
+    if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+    else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
   }
 
   const { email, password } = ctx.request.body;
   const user = await User.findOne({ email });
   if (!user) {
     ctx.set("WWW-Authenticate", `Bearer realm="basicLogin"`);
-    ctx.status = 401;
-    ctx.body = { login: "Invalid user or/and password" };
-    return;
+    return httpError(
+      ctx,
+      401,
+      "USERS/INVALID_CREDENTIALS",
+      "Invalid email or/and password"
+    );
   }
 
   const ok = await bcrypt.compare(password, user.password);
   if (!ok) {
     ctx.set("WWW-Authenticate", `Bearer realm="basicLogin"`);
-    ctx.status = 401;
-    ctx.body = { login: "Invalid user or/and password" };
-    return;
+    return httpError(
+      ctx,
+      401,
+      "USERS/INVALID_CREDENTIALS",
+      "Invalid email or/and password"
+    );
   }
 
   const payload = { id: user.id, username: user.username };
@@ -53,7 +58,7 @@ router.post("/login", async ctx => {
     ctx.body = { token: `Bearer ${token}` };
     return;
   } catch (err) {
-    ctx.throw(err);
+    ctx.throw({ error: "USERS/LOGIN_INTERNAL", description: err });
   }
 });
 

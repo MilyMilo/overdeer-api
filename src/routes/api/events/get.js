@@ -5,6 +5,8 @@ const passport = require("koa-passport");
 const Group = require("../../../models/Group");
 const Event = require("../../../models/Event");
 
+const { httpError } = require("../utils");
+
 /**
  * @route GET /api/groups/:slug/events/:eid
  * @desc Get event by group slug and event id
@@ -24,9 +26,7 @@ router.get(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const event = await Event.findOne({
@@ -37,9 +37,7 @@ router.get(
       .populate("creator", "-__v -email -password -registeredAt");
 
     if (!event) {
-      ctx.status = 404;
-      ctx.body = { error: "Event not found" };
-      return;
+      return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
     ctx.status = 200;

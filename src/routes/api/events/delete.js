@@ -22,30 +22,29 @@ router.delete(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const event = await Event.findOne({ groupId: group._id, id: eid });
 
     if (!event) {
-      ctx.status = 404;
-      ctx.body = { error: "Event not found" };
-      return;
+      return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
     if (uid !== event.creator.toString()) {
-      ctx.status = 403;
-      ctx.body = { error: "Insufficient permissions to delete this event" };
-      return;
+      return httpError(
+        ctx,
+        403,
+        "EVENTS/NOT_PERMITTED",
+        "Insufficient permissions to delete this event"
+      );
     }
 
     try {
       await Event.deleteOne({ id: eid });
       ctx.status = 204;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "EVENTS/DELETE_INTERNAL", description: err });
     }
   }
 );

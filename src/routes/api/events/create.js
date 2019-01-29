@@ -3,10 +3,12 @@ const router = new Router();
 const passport = require("koa-passport");
 const d = require("debug")("api:events:create");
 
-const { validateCreateEventInput } = require("../../../validation/events");
-
 const Group = require("../../../models/Group");
 const Event = require("../../../models/Event");
+const { File } = require("../../../models/File");
+
+const { httpError } = require("../utils");
+const { validateCreateEventInput } = require("../../../validation/events");
 
 /**
  * @route POST /api/groups/:slug/events
@@ -23,11 +25,8 @@ router.post(
     );
 
     if (!isValid) {
-      if (isType) ctx.status = 400;
-      else ctx.status = 422;
-
-      ctx.body = errors;
-      return;
+      if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+      else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
     }
 
     const slug = ctx.params.slug;
@@ -40,18 +39,25 @@ router.post(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
-    const { name, description, type, subject, date } = ctx.request.body;
+    const body = ctx.request.body;
+    const { name, description, type, subject, date } = body;
+
+    let fileDocs = [];
+    if ("files" in body) {
+      const fileIds = body.files;
+      fileDocs = await File.find({ _id: { $in: fileIds } });
+    }
+
     const newEvent = await new Event({
       name,
       description,
       type,
       subject,
       date,
+      files: fileDocs,
       groupId: group._id,
       creator: uid
     });
@@ -65,10 +71,11 @@ router.post(
         description: newEvent.description,
         type: newEvent.type,
         subject: newEvent.subject,
-        date: newEvent.date
+        date: newEvent.date,
+        files: fileDocs
       };
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "EVENTS/CREATE_INTERNAL", description: err });
     }
   }
 );

@@ -9,7 +9,6 @@ const GroupSchema = new Schema({
   slug: { type: Schema.Types.String },
   description: { type: Schema.Types.String },
   isPrivate: { type: Schema.Types.Boolean, required: false, default: false },
-
   owner: { type: Schema.Types.ObjectId, ref: "users" },
   members: [{ type: Schema.Types.ObjectId, ref: "users" }],
   createdAt: { type: Schema.Types.Date, default: Date.now }

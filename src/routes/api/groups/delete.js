@@ -4,6 +4,8 @@ const passport = require("koa-passport");
 
 const Group = require("../../../models/Group");
 
+const { httpError } = require("../utils");
+
 /**
  * @route DELETE /api/groups/:slug
  * @desc Delete group by slug
@@ -17,23 +19,24 @@ router.delete(
 
     const group = await Group.findOne({ slug });
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const uid = ctx.state.user.id;
     if (uid !== group.owner.toString()) {
-      ctx.status = 403;
-      ctx.body = { error: "Insufficient permissions to delete this group" };
-      return;
+      return httpError(
+        ctx,
+        403,
+        "GROUPS/NOT_PERMITTED",
+        "Insufficient permissions to delete this group"
+      );
     }
 
     try {
       await Group.deleteOne({ slug });
       ctx.status = 204;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "GROUPS/DELETE_INTERNAL", description: err });
     }
   }
 );

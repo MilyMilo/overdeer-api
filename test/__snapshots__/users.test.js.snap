@@ -2,13 +2,19 @@
 
 exports[`POST /api/register email missing user creation: email missing 1`] = `
 Object {
-  "email": "Email has to be of type string",
+  "description": Object {
+    "email": "Email has to be of type string",
+  },
+  "error": "VALIDATION/TYPE_ERROR",
 }
 `;
 
 exports[`POST /api/register malformed email user creation: email invalid 1`] = `
 Object {
-  "email": "Email is invalid",
+  "description": Object {
+    "email": "Email is invalid",
+  },
+  "error": "VALIDATION/VALIDATION_ERROR",
 }
 `;
 

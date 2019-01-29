@@ -21,6 +21,12 @@ const typeCheck = (values, typeMap) => {
       // DEBUG:
       // console.log(key, values[key], typeMap[key], typeof values[key]);
 
+      // If the typeMap indicates that the value should be an array,
+      // typeof will fail since it's an 'object' - check for this case
+      if (type === "array" && Array.isArray(values[key])) {
+        break;
+      }
+
       const omit = isOptional && typeof values[key] === "undefined";
       if (omit) {
       } else {

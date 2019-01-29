@@ -4,10 +4,10 @@ const passport = require("koa-passport");
 const slugify = require("slug");
 const d = require("debug")("api:groups:update");
 
-const { validateUpdateGroupInput } = require("../../../validation/groups");
-
 const Group = require("../../../models/Group");
 
+const { httpError } = require("../utils");
+const { validateUpdateGroupInput } = require("../../../validation/groups");
 /**
  * @route PUT /api/groups/:slug
  * @desc Update group by slug
@@ -26,24 +26,22 @@ router.put(
     );
 
     if (!isValid) {
-      if (isType) ctx.status = 400;
-      else ctx.status = 422;
-
-      ctx.body = errors;
-      return;
+      if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+      else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
     }
 
     const group = await Group.findOne({ slug });
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     if (uid !== group.owner.toString()) {
-      ctx.status = 403;
-      ctx.body = { error: "Insufficient permissions to update this group" };
-      return;
+      return httpError(
+        ctx,
+        403,
+        "GROUPS/NOT_PERMITTED",
+        "Insufficient permissions to update this group"
+      );
     }
 
     const body = ctx.request.body;
@@ -57,9 +55,12 @@ router.put(
       });
 
       if (exGroup.length > 0) {
-        ctx.status = 409;
-        ctx.body = { error: "This name is already taken" };
-        return;
+        return httpError(
+          ctx,
+          409,
+          "GROUPS/ALREADY_EXISTS",
+          "This name is already taken"
+        );
       }
 
       group.name = newName;
@@ -84,7 +85,7 @@ router.put(
         isPrivate: group.isPrivate
       };
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "GROUPS/UPDATE_INTERNAL", description: err });
     }
   }
 );

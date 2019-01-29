@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 const User = require("../../../models/User");
 
+const { httpError } = require("../utils");
 const { validateRegisterInput } = require("../../../validation/users");
 
 /**
@@ -15,20 +16,20 @@ router.post("/register", async ctx => {
   const { errors, isValid, isType } = validateRegisterInput(ctx.request.body);
 
   if (!isValid) {
-    if (isType) ctx.status = 400;
-    else ctx.status = 422;
-
-    ctx.body = errors;
-    return;
+    if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+    else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
   }
 
   const { username, email, password } = ctx.request.body;
   const user = await User.findOne({ email });
 
   if (user) {
-    ctx.status = 409;
-    ctx.body = { email: "This email is already registered" };
-    return;
+    return httpError(
+      ctx,
+      409,
+      "USERS/ALREADY_EXISTS",
+      "This email is already registered"
+    );
   }
 
   const newUser = new User({
@@ -49,7 +50,7 @@ router.post("/register", async ctx => {
       email: newUser.email
     };
   } catch (err) {
-    ctx.throw(err);
+    ctx.throw({ error: "USERS/REGISTER_INTERNAL", description: err });
   }
 });
 

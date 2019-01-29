@@ -4,6 +4,8 @@ const passport = require("koa-passport");
 
 const Group = require("../../../models/Group");
 
+const { httpError } = require("../utils");
+
 /**
  * @route GET /api/groups/:slug/join
  * @desc Join a group by slug
@@ -23,16 +25,17 @@ router.post(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const exUser = group.members.findIndex(id => id.toString() === uid);
     if (exUser > -1) {
-      ctx.status = 409;
-      ctx.body = { error: "You are already a member of this group" };
-      return;
+      return httpError(
+        ctx,
+        409,
+        "GROUPS/MEMBER_EXISTS",
+        "You are already a member of this group"
+      );
     }
 
     try {
@@ -44,7 +47,7 @@ router.post(
       ctx.status = 200;
       ctx.body = group;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "GROUPS/JOIN_INTERNAL", description: err });
     }
   }
 );

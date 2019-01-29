@@ -4,10 +4,12 @@ const passport = require("koa-passport");
 
 const d = require("debug")("api:events:update");
 
+const { httpError } = require("../utils");
 const { validateUpdateEventInput } = require("../../../validation/events");
 
 const Group = require("../../../models/Group");
 const Event = require("../../../models/Event");
+const { File } = require("../../../models/File");
 
 /**
  * @route PUT /api/groups/:slug/event/:eid
@@ -24,11 +26,8 @@ router.put(
     );
 
     if (!isValid) {
-      if (isType) ctx.status = 400;
-      else ctx.status = 422;
-
-      ctx.body = errors;
-      return;
+      if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+      else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
     }
 
     const { slug, eid } = ctx.params;
@@ -40,9 +39,7 @@ router.put(
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const event = await Event.findOne({
@@ -51,15 +48,16 @@ router.put(
     });
 
     if (!event) {
-      ctx.status = 404;
-      ctx.body = { error: "Event not found" };
-      return;
+      return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
     if (uid !== event.creator.toString()) {
-      ctx.status = 403;
-      ctx.body = { error: "Insufficient permissions to update this event" };
-      return;
+      return httpError(
+        ctx,
+        403,
+        "EVENTS/NOT_PERMITTED",
+        "Insufficient permissions to update this event"
+      );
     }
 
     const body = ctx.request.body;
@@ -90,6 +88,13 @@ router.put(
       event.date = body.date;
     }
 
+    let fileDocs = [];
+    if ("files" in body) {
+      const fileIds = body.files;
+      fileDocs = await File.find({ _id: { $in: fileIds } });
+      event.files = fileDocs;
+    }
+
     try {
       await event.save();
       ctx.status = 200;
@@ -100,10 +105,11 @@ router.put(
         description: event.description,
         type: event.type,
         subject: event.subject,
-        date: event.date
+        date: event.date,
+        files: event.files
       };
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "EVENTS/UPDATE_INTERNAL", description: err });
     }
   }
 );

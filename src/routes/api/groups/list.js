@@ -3,6 +3,8 @@ const router = new Router();
 
 const Group = require("../../../models/Group");
 
+const { httpError } = require("../utils");
+
 /**
  * @route GET /api/groups
  * @desc Get groups
@@ -14,9 +16,12 @@ router.get("/groups", async ctx => {
   const page = parseInt(ctx.request.query.page) || 1;
 
   if (count < 0 || page < 0) {
-    ctx.status = 400;
-    ctx.body = { error: "Negative pagination parameters are not allowed" };
-    return;
+    return httpError(
+      ctx,
+      400,
+      "GROUPS/NEGATIVE_PAGINATION",
+      "Negative pagination parameters are not allowed"
+    );
   }
 
   // TODO: Allow opt-in authentication to display private groups

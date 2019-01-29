@@ -6,7 +6,9 @@ const d = require("debug")("api:comments:create");
 const Group = require("../../../models/Group");
 const Event = require("../../../models/Event");
 const { Comment } = require("../../../models/Comment");
+const { File } = require("../../../models/File");
 
+const { httpError } = require("../utils");
 const { validateCommentInput } = require("../../../validation/comments");
 
 /**
@@ -22,24 +24,20 @@ router.post(
     const { errors, isValid, isType } = validateCommentInput(ctx.request.body);
 
     if (!isValid) {
-      if (isType) ctx.status = 400;
-      else ctx.status = 422;
-
-      ctx.body = errors;
-      return;
+      if (isType) return httpError(ctx, 400, "VALIDATION/TYPE_ERROR", errors);
+      else return httpError(ctx, 422, "VALIDATION/VALIDATION_ERROR", errors);
     }
 
     const { slug, eid } = ctx.params;
     const uid = ctx.state.user.id;
 
+    // TODO: Members check
     const group = await Group.findOne({
       $or: [{ slug, isPrivate: false }, { slug, members: uid }]
     });
 
     if (!group) {
-      ctx.status = 404;
-      ctx.body = { error: "Group not found" };
-      return;
+      return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
     const event = await Event.findOne({
@@ -48,14 +46,21 @@ router.post(
     });
 
     if (!event) {
-      ctx.status = 404;
-      ctx.body = { error: "Event not found" };
-      return;
+      return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
-    const content = ctx.request.body.content;
+    const body = ctx.request.body;
+    const content = body.content;
+
+    let fileDocs = [];
+    if ("files" in body) {
+      const fileIds = body.files;
+      fileDocs = await File.find({ _id: { $in: fileIds } });
+    }
+
     const newComment = new Comment({
       content,
+      files: fileDocs,
       creator: uid
     });
 
@@ -66,7 +71,7 @@ router.post(
       );
       ctx.status = 204;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "COMMENTS/CREATE_INTERNAL", description: err });
     }
   }
 );

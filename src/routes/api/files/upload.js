@@ -6,8 +6,9 @@ const router = new Router();
 const multer = require("koa-multer");
 const passport = require("koa-passport");
 
-const File = require("../../../models/File");
+const { File } = require("../../../models/File");
 
+const { httpError } = require("../utils");
 const { validateMulterFile } = require("../../../validation/files");
 
 const config = require("../../../../config");
@@ -30,6 +31,11 @@ const upload = multer({
   storage
 }).array("files", 10);
 
+/**
+ * @route POST /api/upload
+ * @desc Upload a file using multi-part form
+ * @access Private
+ */
 router.post(
   "/upload",
   passport.authenticate("jwt", { session: false }),
@@ -39,20 +45,31 @@ router.post(
     } catch (err) {
       switch (err.code) {
         case "LIMIT_UNEXPECTED_FILE":
-          ctx.status = 400;
-          ctx.body = { error: "File upload limit exceeded" };
-          break;
+          return httpError(
+            ctx,
+            400,
+            "FILES/COUNT_LIMIT",
+            "File upload limit exceeded"
+          );
+
         case "LIMIT_FILE_SIZE":
-          ctx.status = 400;
-          ctx.body = { error: "File size limit exceeded" };
-          break;
+          return httpError(
+            ctx,
+            400,
+            "FILES/SIZE_LIMIT",
+            "File size limit exceeded"
+          );
+
         case "DISALLOWED_FILE_TYPE":
-          ctx.status = 400;
-          ctx.body = { error: "Disallowed file type" };
-          break;
+          return httpError(
+            ctx,
+            400,
+            "FILES/DISALLOWED_FILE_TYPE",
+            "Disallowed file type"
+          );
 
         default:
-          ctx.throw(err);
+          ctx.throw({ error: "FILES/UPLOAD_FAILED", description: err });
           break;
       }
     }
@@ -85,7 +102,7 @@ router.post(
       ctx.status = 200;
       ctx.response.body = uploadedFiles;
     } catch (err) {
-      ctx.throw(err);
+      ctx.throw({ error: "FILES/UPLOAD_INTERNAL", description: err });
     }
   }
 );

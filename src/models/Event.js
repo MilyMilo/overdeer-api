@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const Counter = require("./Counter");
 
+const { FileSchema } = require("./File");
 const { CommentSchema } = require("./Comment");
 
 const EventSchema = new Schema({
@@ -18,9 +19,9 @@ const EventSchema = new Schema({
     enum: ["math", "english", "cs"] // TODO: Dynamic
   },
   date: { type: Schema.Types.Date },
-  // files: [{ type: Schema.Types.String }],
   groupId: { type: Schema.Types.ObjectId, ref: "groups" },
   creator: { type: Schema.Types.ObjectId, ref: "users" },
+  files: [FileSchema],
   comments: [CommentSchema],
   createdAt: { type: Schema.Types.Date, default: Date.now }
 });
