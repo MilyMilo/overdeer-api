@@ -23,12 +23,11 @@ router.post(
       return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
-    // Not a member
     const exUser = group.members.findIndex(id => id.toString() === uid);
     if (exUser < 0) {
       return httpError(
         ctx,
-        409,
+        403,
         "GROUPS/MEMBER_NOT_FOUND",
         "You are not a member of this group"
       );

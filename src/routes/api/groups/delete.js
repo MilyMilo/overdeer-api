@@ -16,13 +16,23 @@ router.delete(
   passport.authenticate("jwt", { session: false }),
   async ctx => {
     const slug = ctx.params.slug;
+    const uid = ctx.state.user.id;
 
     const group = await Group.findOne({ slug });
     if (!group) {
       return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
-    const uid = ctx.state.user.id;
+    const exUser = group.members.findIndex(id => id.toString() === uid);
+    if (exUser < 0) {
+      return httpError(
+        ctx,
+        403,
+        "GROUPS/MEMBER_NOT_FOUND",
+        "You are not a member of this group"
+      );
+    }
+
     if (uid !== group.owner.toString()) {
       return httpError(
         ctx,

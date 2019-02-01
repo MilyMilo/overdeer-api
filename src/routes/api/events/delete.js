@@ -5,6 +5,8 @@ const passport = require("koa-passport");
 const Group = require("../../../models/Group");
 const Event = require("../../../models/Event");
 
+const { httpError } = require("../utils");
+
 /**
  * @route DELETE /api/groups/:slug/events/:eid
  * @desc Delete event by event id
@@ -17,12 +19,19 @@ router.delete(
     const { slug, eid } = ctx.params;
     const uid = ctx.state.user.id;
 
-    const group = await Group.findOne({
-      $or: [{ slug, isPrivate: false }, { slug, members: uid }]
-    });
-
+    const group = await Group.findOne({ slug });
     if (!group) {
       return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
+    }
+
+    const exUser = group.members.findIndex(id => id.toString() === uid);
+    if (exUser < 0) {
+      return httpError(
+        ctx,
+        403,
+        "GROUPS/MEMBER_NOT_FOUND",
+        "You are not a member of this group"
+      );
     }
 
     const event = await Event.findOne({ groupId: group._id, id: eid });

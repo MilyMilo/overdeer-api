@@ -19,10 +19,7 @@ router.get(
     const slug = ctx.params.slug;
     const uid = ctx.state.user.id;
 
-    // find a public group by the slug or a private one where the user is an owner
-    const group = await Group.findOne({
-      $or: [{ slug, isPrivate: false }, { slug, owner: uid }]
-    })
+    const group = await Group.findOne({ slug })
       .select("-__v")
       .populate("members", "-__v -email -password -registeredAt")
       .populate("owner", "-__v -email -password -registeredAt");
@@ -31,8 +28,22 @@ router.get(
       return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
     }
 
+    const members = group.members.map(member => member._id.toString());
+
+    // private group but the user is not a member
+    if (group.isPrivate && !members.includes(uid)) {
+      ctx.status = 200;
+      ctx.body = {
+        name: group.name,
+        slug: group.slug,
+        isPrivate: group.isPrivate
+      };
+
+      return;
+    }
+
     const events = await Event.find({ groupId: group._id })
-      .select("-__v -groupId")
+      .select("-__v -groupId -comments")
       .populate("creator", "-__v -email -password -registeredAt");
 
     ctx.status = 200;
