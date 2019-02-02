@@ -19,6 +19,25 @@ router.get(
     const { slug, eid } = ctx.params;
     const uid = ctx.state.user.id;
 
+    const count = parseInt(ctx.request.query.commentsCount) || 15;
+    const page = parseInt(ctx.request.query.commentsPage) || 1;
+    const commentsOnly =
+      ctx.request.query.commentsOnly === "true" ? true : false;
+
+    // TODO: Upvotes system and 'top' sorting?
+    const sorting = ["newest", "oldest"].includes(ctx.request.query.sorting)
+      ? ctx.request.query.sorting
+      : "oldest";
+
+    if (count < 0 || page < 0) {
+      return httpError(
+        ctx,
+        400,
+        "COMMENTS/NEGATIVE_PAGINATION",
+        "Negative pagination parameters are not allowed"
+      );
+    }
+
     const group = await Group.findOne({ slug });
     if (!group) {
       return httpError(ctx, 404, "GROUPS/NOT_FOUND", "Group not found");
@@ -45,8 +64,24 @@ router.get(
       return httpError(ctx, 404, "EVENTS/NOT_FOUND", "Event not found");
     }
 
+    // TODO: Can this be done at the mongoose level?
+    // push oldest (earliest) or newest (latest) comments
+    const comments =
+      sorting === "oldest"
+        ? [...event.comments.splice(count * page - count, count)]
+        : [
+            ...event.comments
+              .splice(event.comments.length - count * page, count)
+              .reverse()
+          ];
+
     ctx.status = 200;
-    ctx.body = event._doc;
+    if (commentsOnly) {
+      ctx.body = { comments };
+      return;
+    }
+
+    ctx.body = { ...event._doc, comments };
   }
 );
 
