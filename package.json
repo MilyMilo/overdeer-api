@@ -36,7 +36,7 @@
     "nodemon": "^1.18.9",
     "prettier": "^1.15.3",
     "redoc-cli": "^0.7.0",
-    "supertest": "^3.3.0"
+    "supertest": "^4.0.2"
   },
   "dependencies": {
     "@sentry/node": "^4.4.2",
