@@ -1,5 +1,6 @@
 const fs = require("fs");
 const Koa = require("koa");
+const cors = require("@koa/cors");
 const morgan = require("koa-morgan");
 const bodyParser = require("koa-bodyparser");
 const passport = require("koa-passport");
@@ -12,6 +13,9 @@ const config = require("../config");
 // App bootstrap
 const app = new Koa();
 app.use(bodyParser());
+
+// CORS
+app.use(cors());
 
 // Logging
 if (process.env.NODE_ENV === "production") {

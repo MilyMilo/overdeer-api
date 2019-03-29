@@ -39,6 +39,7 @@
     "supertest": "^3.3.0"
   },
   "dependencies": {
+    "@koa/cors": "^2.2.3",
     "@sentry/node": "^4.4.2",
     "bcryptjs": "^2.4.3",
     "bluebird": "^3.5.3",

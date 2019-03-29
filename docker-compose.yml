@@ -15,14 +15,14 @@ services:
     volumes:
       - .:/app
     ports:
-      - 8080:8080
+      - 8000:8080
 
-  mongo-admin:
-    image: mrvautin/adminmongo
-    environment:
-      - HOST=0.0.0.0
-      - PORT=5555
-    ports:
-      - 5555:5555
-    depends_on:
-      - mongo
+  # mongo-admin:
+  #   image: mrvautin/adminmongo
+  #   environment:
+  #     - HOST=0.0.0.0
+  #     - PORT=5555
+  #   ports:
+  #     - 5555:5555
+  #   depends_on:
+  #     - mongo
