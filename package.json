@@ -39,7 +39,7 @@
     "supertest": "^3.3.0"
   },
   "dependencies": {
-    "@sentry/node": "^4.4.2",
+    "@sentry/node": "^5.0.0",
     "bcryptjs": "^2.4.3",
     "bluebird": "^3.5.3",
     "jsonwebtoken": "^8.4.0",
